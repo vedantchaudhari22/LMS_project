@@ -1,3 +1,4 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import { initialSignInFormData, initialSignUpFormData } from "@/config";
 import { checkAuthService, loginService, registerService } from "@/services";
 import { createContext, useEffect } from "react";
@@ -13,6 +14,8 @@ export default function AuthProvider({ children }) {
         authenticate: false,
         user: null
     })
+
+    const [loading, setLoading] = useState(true)
 
     const handleRegisterUser = async (e) => {
         e.preventDefault();
@@ -46,28 +49,49 @@ export default function AuthProvider({ children }) {
     }
 
     const checkAuthUser = async () => {
-        const data = await checkAuthService();
+        try {
+            const data = await checkAuthService();
+            if (data.success) {
+                setAuth({
+                    authenticate: true,
+                    user: data.data.user
+                });
+                setLoading(false);
+            }
 
-        if(data.success){
-            setAuth({
-                authenticate: true,
-                user: data.data.user
-            });
-        }
-        else{
-            setAuth({
-                authenticate: false,
-                user: null
-            })
+            else {
+                setAuth({
+                    authenticate: false,
+                    user: null
+                })
+                setLoading(false);
+            }
+        } catch (error) {
+            console.log(error);
+            if (!error?.response?.data?.success) {
+                setAuth({
+                    authenticate: false,
+                    user: null
+                })
+                setLoading(false);
+            }
         }
     }
 
-    useEffect(()=>{
-        checkAuthUser();
-    },[])
+    const resetCredentials = () => {
+        setAuth({
+            authenticate: false,
+            user: null
+        })
+    }
 
-    console.log(auth);
-    
+    useEffect(() => {
+        checkAuthUser();
+    }, [])
+
+    //console.log(auth);
+
+
 
     return <AuthContext.Provider value={{
         signInFormData,
@@ -76,7 +100,13 @@ export default function AuthProvider({ children }) {
         setSignUpFormData,
         handleRegisterUser,
         handleLoginUser,
-        auth
-    }}>{children}</AuthContext.Provider>
+        auth,
+        resetCredentials
+    }}
+    >
+        {
+            loading ? <Skeleton /> : children
+        }
+    </AuthContext.Provider>
 }
 
