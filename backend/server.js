@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken'
 import cors from 'cors'
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth-routes/index.js'
+import mediaRoutes from './routes/instructor-routes/media-routes.js'
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,6 +29,7 @@ mongoose.connect(MONGO_URI)
 .catch((e) => console.log(e))
 
 app.use('/auth', authRoutes);
+app.use('/media', mediaRoutes);
 
 app.listen(PORT , ()=> {
     console.log(`Server is Running on Port ${PORT}`);
