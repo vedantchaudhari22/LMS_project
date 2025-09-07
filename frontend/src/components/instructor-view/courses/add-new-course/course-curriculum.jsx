@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { courseCurriculumInitialFormData } from '@/config';
+import { mediaUploadService } from '@/services';
 const CourseCurriculum = () => {
 
-  const { courseCurriculumFormData, setcourseCurriculumFormData } = useContext(InstructorContext);
+  const { courseCurriculumFormData, setcourseCurriculumFormData, mediaUploadProgress, setMediaUploadProgress } = useContext(InstructorContext);
 
   function handleNewLecture() {
     setcourseCurriculumFormData([
@@ -43,8 +44,34 @@ const CourseCurriculum = () => {
 
   }
 
-  function handleSingleLectureUpload(event, currentIndex) {
-    
+  async function handleSingleLectureUpload(event, currentIndex) {
+    console.log(event.target.files);
+    const selectedFile = event.target.files[0];
+
+    if (selectedFile) {
+      const videoFormData = new FormData();
+      videoFormData.append('file', selectedFile);
+
+      try {
+        setMediaUploadProgress(true);
+        const response = await mediaUploadService(videoFormData);
+        //console.log('response',response);
+        if (response?.success) {
+          let copyCourseCurriculumFormData = [...courseCurriculumFormData];
+          //console.log(copyCourseCurriculumFormData);
+          copyCourseCurriculumFormData[currentIndex] = {
+            ...copyCourseCurriculumFormData[currentIndex],
+            videoUrl: response?.data?.url,
+            public_id: response?.data?.public_id
+          }
+          setcourseCurriculumFormData(copyCourseCurriculumFormData);
+          setMediaUploadProgress(false);
+        }
+      } catch (error) {
+        console.log(error);
+
+      }
+    }
   }
   console.log(courseCurriculumFormData);
 
@@ -85,7 +112,7 @@ const CourseCurriculum = () => {
                     type='file'
                     accept='video/*'
                     className={'mb-4'}
-                    onChange={(event)=> handleSingleLectureUpload(event, index)}
+                    onChange={(event) => handleSingleLectureUpload(event, index)}
                   >
 
                   </Input>
